@@ -1,0 +1,26 @@
+# Минималистичный и безопасный образ Python
+FROM python:3.11-slim-bookworm
+
+# Рабочая директория
+WORKDIR /app
+
+# Копируем зависимости
+COPY requirements.txt .
+
+# Устанавливаем зависимости без кеша
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем приложение
+COPY . .
+
+# Создаём непривилегированного пользователя
+RUN useradd -m -r appuser && chown -R appuser /app
+
+# Используем непривилегированного пользователя
+USER appuser
+
+# Открываем порт 5000
+EXPOSE 5000
+
+# Запуск приложения
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

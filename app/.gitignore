@@ -1,0 +1,9 @@
+# .gitignore
+.vagrant/
+*.log
+*.tar
+*.pyc
+__pycache__/
+.vscode/
+.env
+.DS_Store
