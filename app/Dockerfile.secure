@@ -1,26 +1,35 @@
-# Минималистичный и безопасный образ Python
-FROM python:3.11-slim-bookworm
+# Используем минимальный Alpine с Python 3.12
+FROM python:3.12-alpine
 
 # Рабочая директория
 WORKDIR /app
 
-# Копируем зависимости
+# Установка зависимостей системы, необходимых для pip и Python пакетов
+RUN apk add --no-cache \
+    build-base \
+    libffi-dev \
+    musl-dev \
+    openssl-dev \
+    bash \
+    curl
+
+# Копируем файл зависимостей и устанавливаем Python-пакеты
 COPY requirements.txt .
+RUN python -m pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Устанавливаем зависимости без кеша
-RUN pip install --no-cache-dir -r requirements.txt
+# Копируем весь код приложения
+COPY app.py .
 
-# Копируем приложение
-COPY . .
+# Создаем пользователя без root-привилегий
+RUN adduser -D -h /app -s /bin/sh appuser \
+    && chown -R appuser /app
 
-# Создаём непривилегированного пользователя
-RUN useradd -m -r appuser && chown -R appuser /app
-
-# Используем непривилегированного пользователя
+# Переключаемся на безопасного пользователя
 USER appuser
 
-# Открываем порт 5000
-EXPOSE 5000
+# Переменная окружения Flask
+ENV FLASK_APP=app.py
 
-# Запуск приложения
+# Команда запуска приложения
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
